@@ -31,7 +31,7 @@ mongoose.connect(mongoURI, {
 
     // Start MQTT *after* MongoDB is ready
     const MQTT_BROKER = "mqtt://broker.emqx.io";
-    const MQTT_TOPIC = "sensor/data";
+    const MQTT_TOPIC = "Amrita/Smart/IOT";
     const client = mqtt.connect(MQTT_BROKER);
 
     client.on("connect", () => {
