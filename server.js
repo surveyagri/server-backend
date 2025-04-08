@@ -58,6 +58,45 @@ mongoose.connect(mongoURI, {
         }
     });
 
+    // Publisher client for predictions
+const PREDICTION_BROKER = "mqtt://broker.emqx.io";
+const PREDICTION_TOPIC = "esp8266/predictions";
+const PREDICTION_CLIENT_ID = "esp8266_predictor";
+
+const predictionClient = mqtt.connect(PREDICTION_BROKER, {
+    clientId: PREDICTION_CLIENT_ID,
+});
+
+predictionClient.on("connect", () => {
+    console.log("✅ Prediction publisher connected to MQTT broker");
+});
+
+// Example: Send a dummy prediction after receiving sensor data
+client.on("message", async (topic, message) => {
+    if (topic === MQTT_TOPIC) {
+        try {
+            const data = JSON.parse(message.toString());
+            console.log("📥 Data received:", data);
+
+            const entry = new SensorData(data);
+            await entry.save();
+            console.log("💾 Data saved to MongoDB");
+
+            // Dummy prediction logic – replace this with your ML or logic
+            const prediction = {
+                predicted_value: data.temperature * 1.5, // Example prediction
+                timestamp: new Date(),
+            };
+
+            predictionClient.publish(PREDICTION_TOPIC, JSON.stringify(prediction));
+            console.log("📤 Prediction published:", prediction);
+
+        } catch (err) {
+            console.error("❌ Failed to process message:", err);
+        }
+    }
+});
+
     // Start Express server
     app.listen(5000, () => {
         console.log("🌐 Backend is live on port 5000");
